@@ -1,0 +1,49 @@
+name: "Auto Heal Dependencies"
+description: "Automatically rewrite deprecated API calls and resolve lockfile peer conflicts in CI"
+branding:
+  icon: "refresh-cw"
+  color: "green"
+inputs:
+  path:
+    description: "Directory path to check/heal"
+    required: false
+    default: "."
+  apply:
+    description: "Whether to apply fixes in-place (true) or just scan/gate (false)"
+    required: false
+    default: "false"
+  package_json:
+    description: "Path to package.json to verify peer conflicts"
+    required: false
+    default: "package.json"
+  license_key:
+    description: "OrderStream Pro/Enterprise license key (optional)"
+    required: false
+    default: ""
+runs:
+  using: "composite"
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.12"
+    - name: Install auto-heal-deps
+      shell: bash
+      run: |
+        python -m pip install --upgrade pip
+        pip install -e ${{ github.action_path }}
+    - name: Check Peer Conflicts
+      shell: bash
+      if: hashFiles(inputs.package_json) != ''
+      run: |
+        auto-heal-deps resolve-peers --file "${{ inputs.package_json }}"
+    - name: Scan or Heal Deprecated APIs
+      shell: bash
+      env:
+        ORDERSTREAM_LICENSE_KEY: ${{ inputs.license_key }}
+      run: |
+        CMD="scan"
+        if [ "${{ inputs.apply }}" = "true" ]; then
+          CMD="fix"
+        fi
+        auto-heal-deps $CMD --path "${{ inputs.path }}"
