@@ -89,3 +89,7 @@ def test_cli_execution(tmp_path):
     # license
     exit_lic = main(["license"])
     assert exit_lic == 0
+
+    with pytest.raises(SystemExit) as exc_info:
+        main(["--help"])
+    assert exc_info.value.code == 0
