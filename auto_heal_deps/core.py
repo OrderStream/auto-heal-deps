@@ -146,7 +146,7 @@ class PeerResolver:
         # Common peer conflict scenarios (e.g. React 19 vs older plugin requiring React ^18.0.0)
         for pkg, version in all_deps.items():
             # If react is installed as 19.x, but a lib requires peer react 18
-            if pkg == "react" and version.startswith(("^19", "19")):
+            if pkg == "react" and bool(re.search(r"(?:[\^~>=]|\b)19\b", version)):
                 for peer, peer_ver in peer_deps.items():
                     if peer == "react" and "18" in peer_ver and "19" not in peer_ver:
                         conflicts.append(PeerConflict(
